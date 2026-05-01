@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee CRUD - Django</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; padding: 30px; }
+        h1 { text-align: center; margin-bottom: 24px; color: #333; }
+        .form-card { background: white; padding: 24px; border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 700px; margin: 0 auto 30px; }
+        .form-card h2 { margin-bottom: 16px; color: #444; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-add    { background: #28a745; color: white; }
+        .btn-update { background: #007bff; color: white; }
+        .btn-cancel { background: #6c757d; color: white; margin-left: 8px; }
+        .btn-edit   { background: #ffc107; color: #333; padding: 6px 12px; font-size: 13px; }
+        .btn-delete { background: #dc3545; color: white; padding: 6px 12px; font-size: 13px; margin-left: 6px; }
+        table { width: 100%; max-width: 900px; margin: 0 auto; border-collapse: collapse;
+            background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        th { background: #343a40; color: white; padding: 12px 16px; text-align: left; }
+        td { padding: 11px 16px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8f9fa; }
+        .msg { text-align: center; margin-bottom: 12px; font-weight: bold; }
+        #edit-section { display: none; }
+    </style>
+</head>
+<body>
+<h1>Employee Manager</h1>
+<div id="status" class="msg"></div>
+
+<div class="form-card" id="add-section">
+    <h2>Add Employee</h2>
+    <div class="form-grid">
+        <input id="add-name"       type="text"   placeholder="Name" />
+        <input id="add-email"      type="email"  placeholder="Email" />
+        <input id="add-department" type="text"   placeholder="Department" />
+        <input id="add-salary"     type="number" placeholder="Salary" />
+    </div>
+    <button class="btn btn-add" onclick="addEmployee()">Add Employee</button>
+</div>
+
+<div class="form-card" id="edit-section">
+    <h2>Edit Employee</h2>
+    <input type="hidden" id="edit-id" />
+    <div class="form-grid">
+        <input id="edit-name"       type="text"   placeholder="Name" />
+        <input id="edit-email"      type="email"  placeholder="Email" />
+        <input id="edit-department" type="text"   placeholder="Department" />
+        <input id="edit-salary"     type="number" placeholder="Salary" />
+    </div>
+    <button class="btn btn-update" onclick="updateEmployee()">Update</button>
+    <button class="btn btn-cancel" onclick="cancelEdit()">Cancel</button>
+</div>
+
+<table>
+    <thead>
+        <tr><th>ID</th><th>Name</th><th>Email</th><th>Department</th><th>Salary</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="emp-table">
+        {% for emp in employees %}
+        <tr id="row-{{ emp.id }}">
+            <td>{{ emp.id }}</td>
+            <td>{{ emp.name }}</td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.department }}</td>
+            <td>${{ emp.salary }}</td>
+            <td>
+                <button class="btn btn-edit"
+                    onclick="openEdit({{ emp.id }},'{{ emp.name }}','{{ emp.email }}','{{ emp.department }}',{{ emp.salary }})">Edit</button>
+                <button class="btn btn-delete" onclick="deleteEmployee({{ emp.id }})">Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function showMsg(msg, color='green') {
+        const el = document.getElementById('status');
+        el.style.color = color; el.textContent = msg;
+        setTimeout(() => el.textContent = '', 3000);
+    }
+    async function addEmployee() {
+        const body = {
+            name: document.getElementById('add-name').value.trim(),
+            email: document.getElementById('add-email').value.trim(),
+            department: document.getElementById('add-department').value.trim(),
+            salary: document.getElementById('add-salary').value.trim()
+        };
+        if (!body.name || !body.email || !body.department || !body.salary)
+            return showMsg('All fields required.', 'red');
+        const res  = await fetch('/add/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        const data = await res.json();
+        const tbody = document.getElementById('emp-table');
+        const row = document.createElement('tr');
+        row.id = `row-${data.id}`;
+        row.innerHTML = `<td>${data.id}</td><td>${data.name}</td><td>${data.email}</td>
+            <td>${data.department}</td><td>$${parseFloat(data.salary).toFixed(2)}</td>
+            <td>
+                <button class="btn btn-edit" onclick="openEdit(${data.id},'${data.name}','${data.email}','${data.department}',${data.salary})">Edit</button>
+                <button class="btn btn-delete" onclick="deleteEmployee(${data.id})">Delete</button>
+            </td>`;
+        tbody.appendChild(row);
+        ['add-name','add-email','add-department','add-salary'].forEach(id => document.getElementById(id).value = '');
+        showMsg('Employee added!');
+    }
+    function openEdit(id, name, email, department, salary) {
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-email').value = email;
+        document.getElementById('edit-department').value = department;
+        document.getElementById('edit-salary').value = salary;
+        document.getElementById('edit-section').style.display = 'block';
+        document.getElementById('edit-section').scrollIntoView({ behavior:'smooth' });
+    }
+    function cancelEdit() { document.getElementById('edit-section').style.display = 'none'; }
+    async function updateEmployee() {
+        const id = document.getElementById('edit-id').value;
+        const body = {
+            name: document.getElementById('edit-name').value.trim(),
+            email: document.getElementById('edit-email').value.trim(),
+            department: document.getElementById('edit-department').value.trim(),
+            salary: document.getElementById('edit-salary').value.trim()
+        };
+        await fetch(`/update/${id}/`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        const row = document.getElementById(`row-${id}`);
+        row.cells[1].textContent = body.name; row.cells[2].textContent = body.email;
+        row.cells[3].textContent = body.department; row.cells[4].textContent = `$${parseFloat(body.salary).toFixed(2)}`;
+        cancelEdit(); showMsg('Employee updated!');
+    }
+    async function deleteEmployee(id) {
+        if (!confirm('Delete this employee?')) return;
+        await fetch(`/delete/${id}/`, { method:'DELETE' });
+        document.getElementById(`row-${id}`).remove();
+        showMsg('Employee deleted!', 'red');
+    }
+</script>
+</body>
+</html>
