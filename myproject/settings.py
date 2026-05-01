@@ -30,16 +30,36 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
+
+
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DB', 'devops'),
-        'USER': os.environ.get('MYSQL_USER', 'admin'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'admin'),
-        'HOST': os.environ.get('MYSQL_HOST', 'localhost'),
-        'PORT': '3306',
-    }
+   'default': {
+      'ENGINE': 'django.db.backends.mysql',
+       'NAME': os.environ.get('MYSQL_DB', 'devops'),
+       'USER': os.environ.get('MYSQL_USER', 'admin'),
+      'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'admin'),
+      'HOST': os.environ.get('MYSQL_HOST', 'mysql'),
+      'PORT': '3306',
+  }
 }
+
+
+#DATABASES = {
+#    'default': {
+#       'ENGINE': 'django.db.backends.mysql',
+#        'NAME': os.environ.get('MYSQL_DB', 'devops'),
+#        'USER': os.environ.get('MYSQL_USER', 'admin'),
+#       'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'admin'),
+#       'HOST': os.environ.get('MYSQL_HOST', 'localhost'),
+#       'PORT': '3306',
+#   }
+#}
+
+
+
+
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
